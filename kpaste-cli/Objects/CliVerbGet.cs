@@ -2,8 +2,8 @@ using CommandLine;
 
 namespace kpaste_cli.Objects;
 
-[Verb("add", HelpText = "Add file contents to the index.")]
-public class CliVerbNew
+[Verb("get", HelpText = "Get a paste.")]
+public class CliVerbGet
 {
     
 }

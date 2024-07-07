@@ -9,7 +9,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Utilities.IO;
 using Org.BouncyCastle.Utilities.Zlib;
@@ -38,7 +40,14 @@ namespace kpaste_cli.Logic
             public string Message { get; set; }
         }
 
-        public KPasteCrypto(byte[]? key, byte[]? vector, byte[]? salt)
+        public KPasteCrypto(string key, string vector, string salt)
+        {
+            this.key = FromPseudoBase58(key);
+            this.vector = Convert.FromBase64String(vector);
+            this.salt = Convert.FromBase64String(salt);
+        }
+        
+        public KPasteCrypto(byte[]? key, byte[]? vector, byte[]? salt, bool crypt)
         {
             if (key == null)
             {
@@ -53,7 +62,7 @@ namespace kpaste_cli.Logic
 
             if (vector == null)
             {
-                var randomBytes = new byte[12];
+                var randomBytes = new byte[16];
                 Random.Shared.NextBytes(randomBytes);
                 this.vector = randomBytes;
             }
@@ -101,6 +110,18 @@ namespace kpaste_cli.Logic
             return result;
         }
 
+        private byte[] FromPseudoBase58(string derivedKey)
+        {
+            List<byte> result = new();
+
+            foreach (char character in derivedKey)
+            {
+                result.Add(FromBaseX(character.ToString(), PseudoBase58).ToByteArray().First());
+            }
+
+            return result.ToArray();
+        } 
+
         public string decrypt(string text, string password)
         {
             var derivedKey = deriveKey(password);
@@ -123,10 +144,22 @@ namespace kpaste_cli.Logic
             }
 
             var compressedBytes = compressedStream.ToArray();
-            var encryptedBytes = new byte[compressedBytes.Length];
+            byte[] encryptedBytes;
 
-            var aes256Gcm = new AesGcm(derivedKey, tagSize);
-            aes256Gcm.Encrypt(this.vector, compressedStream.ToArray(), encryptedBytes, tagBytes);
+            //var aes256Gcm = new AesGcm(derivedKey, tagSize);
+            //aes256Gcm.Encrypt(this.vector, compressedStream.ToArray(), encryptedBytes, tagBytes);
+            
+            IBlockCipher cipher = new AesEngine();
+            int macSize = 8*cipher.GetBlockSize();
+            KeyParameter keyParam = new KeyParameter(this.key);
+            AeadParameters keyParamAead = new AeadParameters(keyParam, macSize, this.vector, new byte[0]);
+            GcmBlockCipher cipherMode = new GcmBlockCipher(cipher);
+            cipherMode.Init(true,keyParamAead);
+            int outputSize = cipherMode.GetOutputSize(compressedBytes.Length);
+            byte[] cipherTextData = new byte[outputSize];
+            int result = cipherMode.ProcessBytes(compressedBytes, 0, compressedBytes.Length, cipherTextData, 0);
+            cipherMode.DoFinal(cipherTextData, result);
+            encryptedBytes = cipherTextData;
 
             return encryptedBytes;
         }
@@ -135,10 +168,22 @@ namespace kpaste_cli.Logic
         {
             var tagBytes = new byte[tagSize];
             var cipherBytes = Encoding.UTF8.GetBytes(text);
-            var unencryptedBytes = new byte[cipherBytes.Length];
+            byte[] unencryptedBytes;
 
-            var aes256Gcm = new AesGcm(derivedKey, tagSize);
-            aes256Gcm.Decrypt(this.vector, cipherBytes, tagBytes, unencryptedBytes);
+            //var aes256Gcm = new AesGcm(derivedKey, tagSize);
+            //aes256Gcm.Decrypt(this.vector, cipherBytes, tagBytes, unencryptedBytes);
+            
+            IBlockCipher cipher = new AesEngine();
+            int macSize = 8*cipher.GetBlockSize();
+            KeyParameter keyParam = new KeyParameter(this.key);
+            AeadParameters keyParamAead = new AeadParameters(keyParam, macSize, this.vector, new byte[0]);
+            GcmBlockCipher cipherMode = new GcmBlockCipher(cipher);
+            cipherMode.Init(false,keyParamAead);
+            var outputSize = cipherMode.GetOutputSize(cipherBytes.Length);
+            var plainTextData = new byte[outputSize];
+            var result = cipherMode.ProcessBytes(cipherBytes, 0, cipherBytes.Length,plainTextData, 0);
+            cipherMode.DoFinal(plainTextData, result);
+            unencryptedBytes = plainTextData;
 
             var unencryptedBytesMemoryStream = new MemoryStream(unencryptedBytes);
             var uncompressedMemoryStream = new MemoryStream(unencryptedBytesMemoryStream.Capacity * 2 + 1024);

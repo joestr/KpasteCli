@@ -26,7 +26,7 @@ namespace kpaste_cli.Logic
 
         private static int iterationCount = 100000;
         private static int keySize = 256;
-        private static int tagSize = 128/8;
+        private static int tagSize = 128;
 
         private byte[] key;
         private byte[] vector;
@@ -86,7 +86,7 @@ namespace kpaste_cli.Logic
         public KpasteEncryptionResultDto crypt(string text, string password)
         {
             var derivedKey = deriveKey(password);
-            var message = aes256GcmEncrypt(text, derivedKey);
+            var message = Encoding.UTF8.GetBytes(arraybufferToString(aes256GcmEncrypt(text, derivedKey)));
 
             var result = new KpasteEncryptionResultDto()
             {
@@ -119,6 +119,13 @@ namespace kpaste_cli.Logic
                 result.Add(FromBaseX(character.ToString(), PseudoBase58).ToByteArray().First());
             }
 
+            var size = Math.Ceiling(result.Count / 32d) * 32;
+
+            for (var i = result.Count; i < 32; i++)
+            {
+                result.Insert(0, (byte)0);
+            }
+
             return result.ToArray();
         } 
 
@@ -132,8 +139,7 @@ namespace kpaste_cli.Logic
 
         private byte[] aes256GcmEncrypt(string text, byte[] derivedKey)
         {
-            var tagBytes = new byte[tagSize];
-            var plainBytes = Encoding.UTF8.GetBytes(text);
+            var plainBytes = stringToArraybuffer(text);
 
             var plainBytesMemoryStream = new MemoryStream(plainBytes);
             var compressedStream = new MemoryStream(plainBytes.Length + 1024); //set to estimate of compression ratio
@@ -150,11 +156,10 @@ namespace kpaste_cli.Logic
             //aes256Gcm.Encrypt(this.vector, compressedStream.ToArray(), encryptedBytes, tagBytes);
             
             IBlockCipher cipher = new AesEngine();
-            int macSize = 8*cipher.GetBlockSize();
-            KeyParameter keyParam = new KeyParameter(this.key);
-            AeadParameters keyParamAead = new AeadParameters(keyParam, macSize, this.vector, new byte[0]);
+            KeyParameter keyParam = new KeyParameter(derivedKey);
+            AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, this.vector, new byte[0]);
             GcmBlockCipher cipherMode = new GcmBlockCipher(cipher);
-            cipherMode.Init(true,keyParamAead);
+            cipherMode.Init(true, keyParamAead);
             int outputSize = cipherMode.GetOutputSize(compressedBytes.Length);
             byte[] cipherTextData = new byte[outputSize];
             int result = cipherMode.ProcessBytes(compressedBytes, 0, compressedBytes.Length, cipherTextData, 0);
@@ -167,16 +172,15 @@ namespace kpaste_cli.Logic
         private byte[] aes256GcmDecrypt(string text, byte[] derivedKey)
         {
             var tagBytes = new byte[tagSize];
-            var cipherBytes = Encoding.UTF8.GetBytes(text);
+            var cipherBytes = stringToArraybuffer(Encoding.UTF8.GetString(Convert.FromBase64String(text)));
             byte[] unencryptedBytes;
 
             //var aes256Gcm = new AesGcm(derivedKey, tagSize);
             //aes256Gcm.Decrypt(this.vector, cipherBytes, tagBytes, unencryptedBytes);
             
             IBlockCipher cipher = new AesEngine();
-            int macSize = 8*cipher.GetBlockSize();
-            KeyParameter keyParam = new KeyParameter(this.key);
-            AeadParameters keyParamAead = new AeadParameters(keyParam, macSize, this.vector, new byte[0]);
+            KeyParameter keyParam = new KeyParameter(derivedKey);
+            AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, this.vector, new byte[0]);
             GcmBlockCipher cipherMode = new GcmBlockCipher(cipher);
             cipherMode.Init(false,keyParamAead);
             var outputSize = cipherMode.GetOutputSize(cipherBytes.Length);
@@ -188,9 +192,9 @@ namespace kpaste_cli.Logic
             var unencryptedBytesMemoryStream = new MemoryStream(unencryptedBytes);
             var uncompressedMemoryStream = new MemoryStream(unencryptedBytesMemoryStream.Capacity * 2 + 1024);
 
-            using (GZipStream compress = new GZipStream(uncompressedMemoryStream, CompressionMode.Decompress))
+            using (GZipStream compress = new GZipStream(unencryptedBytesMemoryStream, CompressionMode.Decompress))
             {
-                unencryptedBytesMemoryStream.CopyTo(compress);
+                compress.CopyTo(uncompressedMemoryStream);
             }
 
             var uncompressedBytes = uncompressedMemoryStream.ToArray();
@@ -203,7 +207,7 @@ namespace kpaste_cli.Logic
             byte[] newKeyBytes;
             if (password.Length > 0)
             {
-                var passwordBytes = Encoding.UTF8.GetBytes(password);
+                var passwordBytes = stringToArraybuffer(password);
                 newKeyBytes = new byte[this.key.Length + passwordBytes.Length];
                 this.key.CopyTo(newKeyBytes, 0);
                 passwordBytes.CopyTo(newKeyBytes, this.key.Length);
@@ -255,6 +259,23 @@ namespace kpaste_cli.Logic
                 pow++;
             }
             return result;
+        }
+        
+        public string arraybufferToString(byte[] messageArray)
+        {
+            var message = "";
+            for (var i = 0; i < messageArray.Length; i += 1) {
+                message += ((char)messageArray[i]);
+            }
+            return message;
+        }
+        
+        static byte[] stringToArraybuffer(string message) {
+            byte[] messageArray = new byte[message.Length];
+            for (var i = 0; i < message.Length; i += 1) {
+                messageArray[i] = (byte)message[i];
+            }
+            return messageArray;
         }
     }
 }

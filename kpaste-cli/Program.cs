@@ -9,7 +9,7 @@ class Program
         Console.WriteLine("Hello, World!");
 
         var kpasecrypto = new KPasteCrypto(null, null, null, true);
-        var res = kpasecrypto.crypt("ultrasicher", "strenggeheim");
+        var res = kpasecrypto.Encrypt("ultrasicher", "strenggeheim");
 
         var kPaste = new Paste.NewPasteRequestDto()
         {
@@ -68,7 +68,7 @@ class Program
         
         var kryptoKpasteDecrypt = new KPasteCrypto("4zzsVPDgnuTKH7cj7vMshEtCLN7Ak9CSKbjuAhaLLEzM", "7S3XKXcy8JxckY73FGc05A==", "KQStFXXvzOo=");
         var decryptedText =
-            kryptoKpasteDecrypt.decrypt("/WI2YMrF+Ufx/W0lPXtz6XoMs+t78MnsumPaJcPaE+bRMNQ=", "strenggeheim");
+            kryptoKpasteDecrypt.Decrypt("/WI2YMrF+Ufx/W0lPXtz6XoMs+t78MnsumPaJcPaE+bRMNQ=", "strenggeheim");
         
         Console.WriteLine(decryptedText);
 

@@ -6,6 +6,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using System.IO.Compression;
 using System.Numerics;
 using System.Text;
+using Org.BouncyCastle.Utilities.Encoders;
 
 namespace kpaste_cli.Logic
 {
@@ -18,9 +19,9 @@ namespace kpaste_cli.Logic
         private static int keySize = 256;
         private static int tagSize = 128;
 
-        private byte[] key;
-        private byte[] vector;
-        private byte[] salt;
+        private string key;
+        private string vector;
+        private string salt;
 
         public class KpasteEncryptionResultDto
         {
@@ -33,17 +34,15 @@ namespace kpaste_cli.Logic
         public KPasteCrypto(string key, string vector, string salt)
         {
             this.key = FromPseudoBase58(key);
-            this.vector = Convert.FromBase64String(vector);
-            this.salt = Convert.FromBase64String(salt);
+            this.vector = Encoding.Unicode.GetString(Convert.FromBase64String(vector));
+            this.salt = Encoding.Unicode.GetString(Convert.FromBase64String(salt));
         }
         
-        public KPasteCrypto(byte[]? key, byte[]? vector, byte[]? salt, bool crypt)
+        public KPasteCrypto(string key, string vector, string salt, bool crypt)
         {
             if (key == null)
             {
-                var randomBytes = new byte[32];
-                Random.Shared.NextBytes(randomBytes);
-                this.key = randomBytes;
+                this.key = GetRandomBytes(32);
             }
             else
             {
@@ -52,9 +51,7 @@ namespace kpaste_cli.Logic
 
             if (vector == null)
             {
-                var randomBytes = new byte[16];
-                Random.Shared.NextBytes(randomBytes);
-                this.vector = randomBytes;
+                this.vector = GetRandomBytes(16);
             }
             else
             {
@@ -63,9 +60,7 @@ namespace kpaste_cli.Logic
 
             if (salt == null)
             {
-                var randomBytes = new byte[8];
-                Random.Shared.NextBytes(randomBytes);
-                this.salt = randomBytes;
+                this.salt = GetRandomBytes(8);
             }
             else
             {
@@ -76,14 +71,14 @@ namespace kpaste_cli.Logic
         public KpasteEncryptionResultDto Encrypt(string plainText, string password)
         {
             var derivedKey = DeriveKey(password);
-            var message = Encoding.UTF8.GetBytes(ArrayBufferToString(Aes256GcmEncrypt(plainText, derivedKey)));
+            var message = Aes256GcmEncrypt(Encoding.Unicode.GetString(Encoding.Default.GetBytes(plainText)), derivedKey);
 
             var result = new KpasteEncryptionResultDto()
             {
-                Key = ToPseudoBase58(derivedKey),
-                Vector = Convert.ToBase64String(this.vector),
-                Salt = Convert.ToBase64String(this.salt),
-                Message = Convert.ToBase64String(message)
+                Key = ToPseudoBase58(this.key),
+                Vector = Convert.ToBase64String(Encoding.Unicode.GetBytes(this.vector)),
+                Salt = Convert.ToBase64String(Encoding.Unicode.GetBytes(this.salt)),
+                Message = message
             };
             return result;
         }
@@ -93,12 +88,12 @@ namespace kpaste_cli.Logic
             var derivedKey = DeriveKey(password);
             var message = Aes256GcmDecrypt(cipherText, derivedKey);
 
-            return Encoding.UTF8.GetString(message);
+            return message;
         }
 
-        private byte[] Aes256GcmEncrypt(string plainText, byte[] derivedKey)
+        private string Aes256GcmEncrypt(string plainText, byte[] derivedKey)
         {
-            var plainTextBytes = StringToArrayBuffer(plainText);
+            var plainTextBytes = StringToArrayBuffer(Utf16ToUtf8(plainText));
             var plainTextBytesMemoryStream = new MemoryStream(plainTextBytes);
 
             var compressedPlainTextByesMemoryStream = new MemoryStream(plainTextBytes.Length + 1024); //set to estimate of compression ratio
@@ -115,7 +110,7 @@ namespace kpaste_cli.Logic
 
             IBlockCipher cipher = new AesEngine();
             KeyParameter keyParam = new KeyParameter(derivedKey);
-            AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, this.vector, new byte[0]);
+            AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, StringToArrayBuffer(this.vector), new byte[0]);
             GcmBlockCipher cipherMode = new GcmBlockCipher(cipher);
             cipherMode.Init(true, keyParamAead);
             int outputSize = cipherMode.GetOutputSize(compressedPlainTextBytes.Length);
@@ -124,10 +119,12 @@ namespace kpaste_cli.Logic
             cipherMode.DoFinal(cipherTextData, result);
             encryptedBytes = cipherTextData;
 
-            return encryptedBytes;
+            var resultString = Convert.ToBase64String(Encoding.UTF8.GetBytes(ArrayBufferToString(encryptedBytes)));
+
+            return resultString;
         }
 
-        private byte[] Aes256GcmDecrypt(string cipherText, byte[] derivedKey)
+        private string Aes256GcmDecrypt(string cipherText, byte[] derivedKey)
         {
             var cipherTextBytes = StringToArrayBuffer(Encoding.UTF8.GetString(Convert.FromBase64String(cipherText)));
             byte[] compressedPlainTextBytes;
@@ -137,7 +134,7 @@ namespace kpaste_cli.Logic
 
             IBlockCipher cipher = new AesEngine();
             KeyParameter keyParam = new KeyParameter(derivedKey);
-            AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, this.vector, new byte[0]);
+            AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, StringToArrayBuffer(this.vector), new byte[0]);
             GcmBlockCipher cipherMode = new GcmBlockCipher(cipher);
             cipherMode.Init(false, keyParamAead);
             var outputSize = cipherMode.GetOutputSize(cipherTextBytes.Length);
@@ -154,9 +151,9 @@ namespace kpaste_cli.Logic
                 gZipStream.CopyTo(plainTextBytesMemoryStream);
             }
 
-            var plainTextBytes = plainTextBytesMemoryStream.ToArray();
+            var plainTextString = Utf8ToUtf16(ArrayBufferToString(plainTextBytesMemoryStream.ToArray()));
 
-            return plainTextBytes;
+            return plainTextString;
         }
 
         private byte[] DeriveKey(string password)
@@ -165,51 +162,47 @@ namespace kpaste_cli.Logic
             if (password.Length > 0)
             {
                 var passwordBytes = StringToArrayBuffer(password);
+                var keyBytes = StringToArrayBuffer(this.key);
                 newKeyBytes = new byte[this.key.Length + passwordBytes.Length];
-                this.key.CopyTo(newKeyBytes, 0);
-                passwordBytes.CopyTo(newKeyBytes, this.key.Length);
+                keyBytes.CopyTo(newKeyBytes, 0);
+                passwordBytes.CopyTo(newKeyBytes, keyBytes.Length);
             }
             else
             {
-                newKeyBytes = new byte[this.key.Length];
+                var keyBytes = StringToArrayBuffer(this.key);
+                newKeyBytes = keyBytes;
             }
 
+            var saltBytes = StringToArrayBuffer(this.salt);
+
             var pdb = new Pkcs5S2ParametersGenerator(new Org.BouncyCastle.Crypto.Digests.Sha256Digest());
-            pdb.Init(newKeyBytes, salt,
-                iterationCount);
+            pdb.Init(newKeyBytes, saltBytes, iterationCount);
             var derivedKey = (KeyParameter)pdb.GenerateDerivedMacParameters(keySize);
             return derivedKey.GetKey();
         }
 
-        private string ToPseudoBase58(byte[] derivedKey)
+        private string ToPseudoBase58(string input)
         {
             var result = "";
 
-            foreach (var derivedKeyByte in derivedKey)
+            foreach (var inputByte in StringToArrayBuffer(input))
             {
-                result += ToBaseX(derivedKeyByte, PseudoBase58);
+                result += ToBaseX(inputByte, PseudoBase58);
             }
 
             return result;
         }
 
-        private byte[] FromPseudoBase58(string derivedKey)
+        private string FromPseudoBase58(string input)
         {
             List<byte> result = new();
 
-            foreach (char character in derivedKey)
+            foreach (char character in input)
             {
                 result.Add(FromBaseX(character.ToString(), PseudoBase58).ToByteArray().First());
             }
 
-            var size = Math.Ceiling(result.Count / 32d) * 32;
-
-            for (var i = result.Count; i < 32; i++)
-            {
-                result.Insert(0, (byte)0);
-            }
-
-            return result.ToArray();
+            return ArrayBufferToString(result.ToArray());
         }
 
         public static string ToBaseX(BigInteger number, string baseX)
@@ -253,7 +246,7 @@ namespace kpaste_cli.Logic
         {
             var message = "";
             for (var i = 0; i < messageArray.Length; i += 1) {
-                message += ((char)messageArray[i]);
+                message += Encoding.Unicode.GetString(new byte[] { messageArray[i] });
             }
             return message;
         }
@@ -261,9 +254,34 @@ namespace kpaste_cli.Logic
         private byte[] StringToArrayBuffer(string message) {
             byte[] messageArray = new byte[message.Length];
             for (var i = 0; i < message.Length; i += 1) {
-                messageArray[i] = (byte)message[i];
+                messageArray[i] = Encoding.Unicode.GetBytes(new char[] { message[i] })[0];
             }
             return messageArray;
+        }
+
+        private string Utf16ToUtf8(string message)
+        {
+            return Encoding.UTF8.GetString(Encoding.Unicode.GetBytes(message));
+        }
+
+        private string Utf8ToUtf16(string message)
+        {
+            return Encoding.Unicode.GetString(Encoding.UTF8.GetBytes(message));
+        }
+
+        private string GetRandomBytes(int length)
+        {
+            var result = "";
+
+            var bytes = new byte[length];
+            Random.Shared.NextBytes(bytes);
+
+            for (var i = 0; i < bytes.Length; i += 1)
+            {
+                result += Encoding.Unicode.GetString(new byte[] { bytes[i] });
+            }
+
+            return result;
         }
     }
 }

@@ -71,7 +71,7 @@ namespace kpaste_cli.Logic
         public KpasteEncryptionResultDto Encrypt(string plainText, string password)
         {
             var derivedKey = DeriveKey(password);
-            var message = Aes256GcmEncrypt(Encoding.Unicode.GetString(Encoding.Default.GetBytes(plainText)), derivedKey);
+            var message = Aes256GcmEncrypt(plainText, derivedKey);
 
             var result = new KpasteEncryptionResultDto()
             {
@@ -246,7 +246,7 @@ namespace kpaste_cli.Logic
         {
             var message = "";
             for (var i = 0; i < messageArray.Length; i += 1) {
-                message += Encoding.Unicode.GetString(new byte[] { messageArray[i] });
+                message += (char)messageArray[i];
             }
             return message;
         }
@@ -254,19 +254,21 @@ namespace kpaste_cli.Logic
         private byte[] StringToArrayBuffer(string message) {
             byte[] messageArray = new byte[message.Length];
             for (var i = 0; i < message.Length; i += 1) {
-                messageArray[i] = Encoding.Unicode.GetBytes(new char[] { message[i] })[0];
+                messageArray[i] = (byte)message[i];
             }
             return messageArray;
         }
 
         private string Utf16ToUtf8(string message)
         {
-            return Encoding.UTF8.GetString(Encoding.Unicode.GetBytes(message));
+            return message;
+            //return Encoding.UTF8.GetString(Encoding.Unicode.GetBytes(message));
         }
 
         private string Utf8ToUtf16(string message)
         {
-            return Encoding.Unicode.GetString(Encoding.UTF8.GetBytes(message));
+            return message;
+            //return Encoding.Unicode.GetString(Encoding.UTF8.GetBytes(message));
         }
 
         private string GetRandomBytes(int length)
@@ -278,7 +280,7 @@ namespace kpaste_cli.Logic
 
             for (var i = 0; i < bytes.Length; i += 1)
             {
-                result += Encoding.Unicode.GetString(new byte[] { bytes[i] });
+                result += (char)bytes[i];
             }
 
             return result;

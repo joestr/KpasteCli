@@ -5,8 +5,12 @@ using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.IO.Compression;
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Web;
 using Org.BouncyCastle.Utilities.Encoders;
+using SimpleBase;
 
 namespace kpaste_cli.Logic
 {
@@ -71,7 +75,7 @@ namespace kpaste_cli.Logic
         public KpasteEncryptionResultDto Encrypt(string plainText, string password)
         {
             var derivedKey = DeriveKey(password);
-            var message = Aes256GcmEncrypt(Encoding.Unicode.GetString(Encoding.Default.GetBytes(plainText)), derivedKey);
+            var message = Aes256GcmEncrypt(plainText, derivedKey);
 
             var result = new KpasteEncryptionResultDto()
             {
@@ -96,7 +100,7 @@ namespace kpaste_cli.Logic
             var plainTextBytes = StringToArrayBuffer(Utf16ToUtf8(plainText));
             var plainTextBytesMemoryStream = new MemoryStream(plainTextBytes);
 
-            var compressedPlainTextByesMemoryStream = new MemoryStream(plainTextBytes.Length + 1024); //set to estimate of compression ratio
+            var compressedPlainTextByesMemoryStream = new MemoryStream(plainTextBytes.Length); //set to estimate of compression ratio
             using (GZipStream gZipStream = new GZipStream(compressedPlainTextByesMemoryStream, CompressionMode.Compress))
             {
                 plainTextBytesMemoryStream.CopyTo(gZipStream);
@@ -119,14 +123,14 @@ namespace kpaste_cli.Logic
             cipherMode.DoFinal(cipherTextData, result);
             encryptedBytes = cipherTextData;
 
-            var resultString = Convert.ToBase64String(Encoding.UTF8.GetBytes(ArrayBufferToString(encryptedBytes)));
+            var resultString = Convert.ToBase64String(encryptedBytes);
 
             return resultString;
         }
 
         private string Aes256GcmDecrypt(string cipherText, byte[] derivedKey)
         {
-            var cipherTextBytes = StringToArrayBuffer(Encoding.UTF8.GetString(Convert.FromBase64String(cipherText)));
+            var cipherTextBytes = Convert.FromBase64String(cipherText);
             byte[] compressedPlainTextBytes;
 
             //var aes256Gcm = new AesGcm(derivedKey, tagSize);
@@ -151,7 +155,7 @@ namespace kpaste_cli.Logic
                 gZipStream.CopyTo(plainTextBytesMemoryStream);
             }
 
-            var plainTextString = Utf8ToUtf16(ArrayBufferToString(plainTextBytesMemoryStream.ToArray()));
+            var plainTextString = Utf8ToUtf16(Encoding.UTF8.GetString(plainTextBytesMemoryStream.ToArray()));
 
             return plainTextString;
         }
@@ -163,7 +167,7 @@ namespace kpaste_cli.Logic
             {
                 var passwordBytes = StringToArrayBuffer(password);
                 var keyBytes = StringToArrayBuffer(this.key);
-                newKeyBytes = new byte[this.key.Length + passwordBytes.Length];
+                newKeyBytes = new byte[keyBytes.Length + passwordBytes.Length];
                 keyBytes.CopyTo(newKeyBytes, 0);
                 passwordBytes.CopyTo(newKeyBytes, keyBytes.Length);
             }
@@ -175,34 +179,18 @@ namespace kpaste_cli.Logic
 
             var saltBytes = StringToArrayBuffer(this.salt);
 
-            var pdb = new Pkcs5S2ParametersGenerator(new Org.BouncyCastle.Crypto.Digests.Sha256Digest());
-            pdb.Init(newKeyBytes, saltBytes, iterationCount);
-            var derivedKey = (KeyParameter)pdb.GenerateDerivedMacParameters(keySize);
-            return derivedKey.GetKey();
+            return Rfc2898DeriveBytes.Pbkdf2(newKeyBytes, saltBytes, iterationCount, HashAlgorithmName.SHA256,
+                keySize/8);
         }
 
         private string ToPseudoBase58(string input)
         {
-            var result = "";
-
-            foreach (var inputByte in StringToArrayBuffer(input))
-            {
-                result += ToBaseX(inputByte, PseudoBase58);
-            }
-
-            return result;
+            return Base58.Bitcoin.Encode(StringToArrayBuffer(input));
         }
 
         private string FromPseudoBase58(string input)
         {
-            List<byte> result = new();
-
-            foreach (char character in input)
-            {
-                result.Add(FromBaseX(character.ToString(), PseudoBase58).ToByteArray().First());
-            }
-
-            return ArrayBufferToString(result.ToArray());
+            return ArrayBufferToString(Base58.Bitcoin.Decode(input));
         }
 
         public static string ToBaseX(BigInteger number, string baseX)

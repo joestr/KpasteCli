@@ -1,4 +1,5 @@
-﻿using kpaste_cli.Logic;
+﻿using System.Text;
+using kpaste_cli.Logic;
 
 namespace kpaste_cli;
 
@@ -7,10 +8,25 @@ class Program
     static void Main(string[] args)
     {
         Console.WriteLine("Hello, World!");
+        
+        
+            
+            
+        
+        var cKey = Encoding.UTF8.GetString(Convert.FromBase64String("DTJORvfCmU489ctlHG3Wti6253go2LhXjl20tk3WErs="));
+        var cVector = Encoding.UTF8.GetString(Convert.FromBase64String("yxe2Xky9w/yuafdTGpF9Jg=="));
+        var cSalt = Encoding.UTF8.GetString(Convert.FromBase64String("v170GaZipA8="));
 
-        var kpasecrypto = new KPasteCrypto(null, null, null, true);
-        var res = kpasecrypto.Encrypt("ultrasicher", "strenggeheim");
+        var kpasecrypto = new KPasteCrypto(cKey, cVector, cSalt, true);
+        var res = kpasecrypto.Encrypt("text", "1234");
+        
+        Console.WriteLine(res.Key);
+        Console.WriteLine(res.Vector);
+        Console.WriteLine(res.Salt);
+        Console.WriteLine(res.Message);
 
+        return;
+        
         var kPaste = new Paste.NewPasteRequestDto()
         {
             Burn = false,

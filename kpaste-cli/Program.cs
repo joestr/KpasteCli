@@ -1,5 +1,7 @@
 ﻿using System.Text;
+using CommandLine;
 using kpaste_cli.Logic;
+using kpaste_cli.Objects;
 
 namespace kpaste_cli;
 
@@ -7,87 +9,83 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
-        
-        
-            
-            
-        
-        var cKey = Encoding.UTF8.GetString(Convert.FromBase64String("DTJORvfCmU489ctlHG3Wti6253go2LhXjl20tk3WErs="));
-        var cVector = Encoding.UTF8.GetString(Convert.FromBase64String("yxe2Xky9w/yuafdTGpF9Jg=="));
-        var cSalt = Encoding.UTF8.GetString(Convert.FromBase64String("v170GaZipA8="));
+        Type[] types =
+        {
+            typeof(CliVerbNew),
+            typeof(CliVerbGet)
+        };
 
-        var kpasecrypto = new KPasteCrypto(cKey, cVector, cSalt, true);
-        var res = kpasecrypto.Encrypt("text", "1234");
-        
-        Console.WriteLine(res.Key);
-        Console.WriteLine(res.Vector);
-        Console.WriteLine(res.Salt);
-        Console.WriteLine(res.Message);
+        Parser.Default.ParseArguments(args, types).WithParsed(Run).WithNotParsed(RunError);
 
         return;
-        
+    }
+
+    private static void Run(object obj)
+    {
+        switch (obj)
+        {
+            case CliVerbNew options:
+                RunCliVerbNew(options);
+                break;
+            case CliVerbGet options:
+                RunCliVerbGet(options);
+                break;
+        }
+    }
+
+    private static void RunCliVerbNew(CliVerbNew options)
+    {
+        var validity = options.Validity;
+        var password = options.Password;
+        var isPasswordPresent = password != "";
+        var burn = options.Burn;
+        var fileName = options.FileName;
+        var message = options.Message;
+        var content = "";
+
+        if (fileName != null)
+        {
+            content = File.ReadAllText(fileName, Encoding.UTF8);
+        }
+        else if (message != null)
+        {
+            content = message;
+        }
+
+        var kPasteCrypto = new KPasteCrypto();
+        var encryptionResult = kPasteCrypto.Encrypt(content, password);
+
         var kPaste = new Paste.NewPasteRequestDto()
         {
-            Burn = false,
-            Vector = res.Vector,
-            Salt = res.Salt,
-            Data = res.Message,
-            Password = true,
-            Validity = "1w"
+            Burn = burn,
+            Vector = encryptionResult.Vector,
+            Salt = encryptionResult.Salt,
+            Data = encryptionResult.Message,
+            Password = isPasswordPresent,
+            Validity = validity
         };
 
         var paste = new Paste();
-        var pasteRes = paste.sendPaste(kPaste);
+        var pasteRes = paste.SendPaste(kPaste);
 
-        // we generate
-        // https://kpaste.infomaniak.com/O3h3mVVblBmf5BrSLPHz3lR12s9H2Z_H#N3F4z3B3A4x3K4K2P5V2J4N4U25G4oz433T15y4N4o3c93A3XJHXw4D3
-        /*
-            {
-                "result": "success",
-                "data": {
-                    "id": "O3h3mVVblBmf5BrSLPHz3lR12s9H2Z_H",
-                    "data": "For+lljeY+YbsOEBORpIzyd0xoIIUVKGsFCe0\/yLww==",
-                    "burn": false,
-                    "password": true,
-                    "vector": "YRGPYfUhv57A3VPO",
-                    "salt": "6B3D2PH6b0w=",
-                    "created_at": 1720018620,
-                    "updated_at": 1720018620,
-                    "expirated_at": 1720623420,
-                    "deleted_at": null
-                }
-            }
-        */
+        Console.WriteLine($"https://kpaste.infomaniak.com/{pasteRes.Data}#{encryptionResult.Key}");
+    }
 
-        Console.WriteLine($"https://kpaste.infomaniak.com/{pasteRes.Data}#{res.Key}");
+    private static void RunCliVerbGet(CliVerbGet options)
+    {
 
-        // generated from the official site
-        // https://kpaste.infomaniak.com/Fr8KL5A51-1_qSQ1CmeQVNHJBRdAdz3x#4zzsVPDgnuTKH7cj7vMshEtCLN7Ak9CSKbjuAhaLLEzM
-        /*
-            {
-                "result": "success",
-                "data": {
-                    "id": "Fr8KL5A51-1_qSQ1CmeQVNHJBRdAdz3x",
-                    "data": "\/WI2YMrF+Ufx\/W0lPXtz6XoMs+t78MnsumPaJcPaE+bRMNQ=",
-                    "burn": false,
-                    "password": true,
-                    "vector": "7S3XKXcy8JxckY73FGc05A==",
-                    "salt": "KQStFXXvzOo=",
-                    "created_at": 1720018510,
-                    "updated_at": 1720018510,
-                    "expirated_at": 1720623310,
-                    "deleted_at": null
-                }
-            }
-        */
-        
-        var kryptoKpasteDecrypt = new KPasteCrypto("4zzsVPDgnuTKH7cj7vMshEtCLN7Ak9CSKbjuAhaLLEzM", "7S3XKXcy8JxckY73FGc05A==", "KQStFXXvzOo=");
-        var decryptedText =
-            kryptoKpasteDecrypt.Decrypt("/WI2YMrF+Ufx/W0lPXtz6XoMs+t78MnsumPaJcPaE+bRMNQ=", "strenggeheim");
-        
-        Console.WriteLine(decryptedText);
+    }
 
-        return;
+    /// <summary>
+    /// Will be executed if an error occours whilst parsing the command line arguments.
+    /// </summary>
+    /// <param name="errors">The errors occoured during parsing.</param>
+    /// <returns></returns>
+    private static void RunError(IEnumerable<CommandLine.Error> errors)
+    {
+        if (errors.Any(x => x is not HelpRequestedError || x is not VersionRequestedError))
+        {
+
+        }
     }
 }

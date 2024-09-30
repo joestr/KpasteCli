@@ -4,21 +4,13 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.IO.Compression;
-using System.Numerics;
 using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Web;
-using Org.BouncyCastle.Utilities.Encoders;
 using SimpleBase;
 
 namespace kpaste_cli.Logic
 {
     public class KPasteCrypto
     {
-        // WHO THE HELL???
-        private static string PseudoBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
         private static int iterationCount = 100000;
         private static int keySize = 256;
         private static int tagSize = 128;
@@ -37,39 +29,16 @@ namespace kpaste_cli.Logic
 
         public KPasteCrypto(string key, string vector, string salt)
         {
-            this.key = FromPseudoBase58(key);
-            this.vector = Encoding.Unicode.GetString(Convert.FromBase64String(vector));
-            this.salt = Encoding.Unicode.GetString(Convert.FromBase64String(salt));
+            this.key = FromBase58(key);
+            this.vector = ArrayBufferToString(Convert.FromBase64String(vector));
+            this.salt = ArrayBufferToString(Convert.FromBase64String(salt));
         }
         
-        public KPasteCrypto(string key, string vector, string salt, bool crypt)
+        public KPasteCrypto()
         {
-            if (key == null)
-            {
-                this.key = GetRandomBytes(32);
-            }
-            else
-            {
-                this.key = key;
-            }
-
-            if (vector == null)
-            {
-                this.vector = GetRandomBytes(16);
-            }
-            else
-            {
-                this.vector = vector;
-            }
-
-            if (salt == null)
-            {
-                this.salt = GetRandomBytes(8);
-            }
-            else
-            {
-                this.salt = salt;
-            }
+            this.key = GetRandomBytes(32);
+            this.vector = GetRandomBytes(16);
+            this.salt = GetRandomBytes(8);
         }
 
         public KpasteEncryptionResultDto Encrypt(string plainText, string password)
@@ -79,9 +48,9 @@ namespace kpaste_cli.Logic
 
             var result = new KpasteEncryptionResultDto()
             {
-                Key = ToPseudoBase58(this.key),
-                Vector = Convert.ToBase64String(Encoding.Unicode.GetBytes(this.vector)),
-                Salt = Convert.ToBase64String(Encoding.Unicode.GetBytes(this.salt)),
+                Key = ToBase58(this.key),
+                Vector = Convert.ToBase64String(StringToArrayBuffer(this.vector)),
+                Salt = Convert.ToBase64String(StringToArrayBuffer(this.salt)),
                 Message = message
             };
             return result;
@@ -109,9 +78,6 @@ namespace kpaste_cli.Logic
             var compressedPlainTextBytes = compressedPlainTextByesMemoryStream.ToArray();
             byte[] encryptedBytes;
 
-            //var aes256Gcm = new AesGcm(derivedKey, tagSize);
-            //aes256Gcm.Encrypt(this.vector, compressedStream.ToArray(), encryptedBytes, tagBytes);
-
             IBlockCipher cipher = new AesEngine();
             KeyParameter keyParam = new KeyParameter(derivedKey);
             AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, StringToArrayBuffer(this.vector), new byte[0]);
@@ -133,9 +99,6 @@ namespace kpaste_cli.Logic
             var cipherTextBytes = Convert.FromBase64String(cipherText);
             byte[] compressedPlainTextBytes;
 
-            //var aes256Gcm = new AesGcm(derivedKey, tagSize);
-            //aes256Gcm.Decrypt(this.vector, cipherBytes, tagBytes, unencryptedBytes);
-
             IBlockCipher cipher = new AesEngine();
             KeyParameter keyParam = new KeyParameter(derivedKey);
             AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, StringToArrayBuffer(this.vector), new byte[0]);
@@ -155,7 +118,7 @@ namespace kpaste_cli.Logic
                 gZipStream.CopyTo(plainTextBytesMemoryStream);
             }
 
-            var plainTextString = Utf8ToUtf16(Encoding.UTF8.GetString(plainTextBytesMemoryStream.ToArray()));
+            var plainTextString = ArrayBufferToString(plainTextBytesMemoryStream.ToArray());
 
             return plainTextString;
         }
@@ -183,51 +146,14 @@ namespace kpaste_cli.Logic
                 keySize/8);
         }
 
-        private string ToPseudoBase58(string input)
+        private string ToBase58(string input)
         {
             return Base58.Bitcoin.Encode(StringToArrayBuffer(input));
         }
 
-        private string FromPseudoBase58(string input)
+        private string FromBase58(string input)
         {
             return ArrayBufferToString(Base58.Bitcoin.Decode(input));
-        }
-
-        public static string ToBaseX(BigInteger number, string baseX)
-        {
-            int l = baseX.Length;
-            string result = "";
-            while (number > 0)
-            {
-                BigInteger remainder = number % l;
-                int index = (int)remainder;
-                if (index >= l)
-                {
-                    throw new ArgumentException($"Cannot convert {number} ToBaseX {baseX}");
-                }
-                result += baseX[index];
-                number /= l;
-            }
-            return result;
-        }
-
-        public static BigInteger FromBaseX(string input, string baseX)
-        {
-            int l = baseX.Length;
-            BigInteger result = -1;
-            int pow = 0;
-            foreach (char c in input)
-            {
-                int index = baseX.IndexOf(c);
-                if (index < 0)
-                {
-                    throw new ArgumentException($"Cannot convert {input} FromBaseX {baseX}");
-                }
-                BigInteger additions = BigInteger.Pow(l, pow) * index;
-                result += additions;
-                pow++;
-            }
-            return result;
         }
         
         private string ArrayBufferToString(byte[] messageArray)

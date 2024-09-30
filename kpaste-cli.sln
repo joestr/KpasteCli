@@ -1,6 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kpaste-cli", "kpaste-cli\kpaste-cli.csproj", "{DD728A7F-D54A-44BE-9CCE-557E6C148132}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34525.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kpaste-cli", "kpaste-cli\kpaste-cli.csproj", "{DD728A7F-D54A-44BE-9CCE-557E6C148132}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kpaste-cli.Tests", "kpaste-cli.Tests\kpaste-cli.Tests.csproj", "{C3D8C567-102E-4309-A8EB-9F526D71CE48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +17,15 @@ Global
 		{DD728A7F-D54A-44BE-9CCE-557E6C148132}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD728A7F-D54A-44BE-9CCE-557E6C148132}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD728A7F-D54A-44BE-9CCE-557E6C148132}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3D8C567-102E-4309-A8EB-9F526D71CE48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3D8C567-102E-4309-A8EB-9F526D71CE48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3D8C567-102E-4309-A8EB-9F526D71CE48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3D8C567-102E-4309-A8EB-9F526D71CE48}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {708F5104-AAAD-49D6-A160-4129E461FE7A}
 	EndGlobalSection
 EndGlobal

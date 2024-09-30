@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
+﻿using System.Net;
 using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace kpaste_cli.Logic
@@ -54,7 +48,7 @@ namespace kpaste_cli.Logic
             public string Data { get; set; }
         }
 
-        public NewPasteResponseDto sendPaste(NewPasteRequestDto dto)
+        public NewPasteResponseDto SendPaste(NewPasteRequestDto dto)
         {
             var response = httpClient.Send(new HttpRequestMessage()
             {

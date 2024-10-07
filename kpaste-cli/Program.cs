@@ -73,7 +73,31 @@ class Program
 
     private static void RunCliVerbGet(CliVerbGet options)
     {
+        var url = options.Url;
+        var password = options.Password;
 
+        var pasteId = new UriBuilder(url).Path;
+        pasteId = pasteId.Substring(1, pasteId.Length-1);
+        var paste = new Paste().ReceivePaste(pasteId);
+
+        var key = new UriBuilder(url).Fragment;
+        key = key.Substring(1, key.Length-1);
+
+        if (paste.Data.Password == true && password == "")
+        {
+            Console.Write("Password: ");
+            password = Console.ReadLine();
+        }
+
+        if (password == null)
+        {
+            return;
+        }
+
+        var kPasteCrypto = new KPasteCrypto(key, paste.Data.Vector, paste.Data.Salt);
+        var decryptionResult = kPasteCrypto.Decrypt(paste.Data.Data, password);
+
+        Console.WriteLine(decryptionResult);
     }
 
     /// <summary>

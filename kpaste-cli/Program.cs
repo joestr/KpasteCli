@@ -94,8 +94,8 @@ class Program
             return;
         }
 
-        var kPasteCrypto = new KPasteCrypto(key, paste.Data.Vector, paste.Data.Salt);
-        var decryptionResult = kPasteCrypto.Decrypt(paste.Data.Data, password);
+        var kPasteCrypto = new KPasteCrypto(key.Replace("\\/", "/"), paste.Data.Vector.Replace("\\/", "/"), paste.Data.Salt.Replace("\\/", "/"));
+        var decryptionResult = kPasteCrypto.Decrypt(paste.Data.Data.Replace("\\/", "/"), password);
 
         Console.WriteLine(decryptionResult);
     }

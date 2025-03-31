@@ -14,7 +14,7 @@ public class CliVerbNew
     [Option("password", Required = false, Default = "", HelpText = "An additional password to protect the message.")]
     public string Password { get; set; } = "";
 
-    [Option("filename", Group = "Content", Required = true, HelpText = "An additional password to protect the message.")]
+    [Option("filename", Group = "Content", Required = true, HelpText = "The name of the file to upload.")]
     public string? FileName { get; set; }
 
     [Option("message", Group = "Content", Required = true, HelpText = "The message.")]

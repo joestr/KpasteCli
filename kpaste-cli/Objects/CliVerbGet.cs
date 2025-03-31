@@ -10,4 +10,7 @@ public class CliVerbGet
 
     [Option("password", Required = false, Default = "", HelpText = "The password the paste has been encrypted with.")]
     public string Password { get; set; } = "";
+
+    [Option("filename", Required = false, Default = "", HelpText = "Where to output the file.")]
+    public string FileName { get; set; } = "";
 }

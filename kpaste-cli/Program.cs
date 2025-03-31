@@ -75,6 +75,7 @@ class Program
     {
         var url = options.Url;
         var password = options.Password;
+        var fileName = options.FileName;
 
         var pasteId = new UriBuilder(url).Path;
         pasteId = pasteId.Substring(1, pasteId.Length-1);
@@ -97,7 +98,14 @@ class Program
         var kPasteCrypto = new KPasteCrypto(key.Replace("\\/", "/"), paste.Data.Vector.Replace("\\/", "/"), paste.Data.Salt.Replace("\\/", "/"));
         var decryptionResult = kPasteCrypto.Decrypt(paste.Data.Data.Replace("\\/", "/"), password);
 
-        Console.WriteLine(decryptionResult);
+        if (fileName == "")
+        {
+            Console.WriteLine(decryptionResult);
+        }
+        else
+        {
+            File.WriteAllText(fileName, decryptionResult);
+        }
     }
 
     /// <summary>

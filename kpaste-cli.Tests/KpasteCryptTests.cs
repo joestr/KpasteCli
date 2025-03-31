@@ -49,8 +49,6 @@ namespace kpaste_cli.Test
                 paste.SendPaste(kPaste);
             });
 
-            // we generate
-            // https://kpaste.infomaniak.com/O3h3mVVblBmf5BrSLPHz3lR12s9H2Z_H#N3F4z3B3A4x3K4K2P5V2J4N4U25G4oz433T15y4N4o3c93A3XJHXw4D3
             /*
                 {
                     "result": "success",
@@ -73,32 +71,30 @@ namespace kpaste_cli.Test
         [Test]
         public void TestReceiveAndDecrypt()
         {
-
-            Assert.Inconclusive("The official site does not provide a MAC tagged message. This would fail.");
-
-            // generated from the official site
-            // https://kpaste.infomaniak.com/Fr8KL5A51-1_qSQ1CmeQVNHJBRdAdz3x#4zzsVPDgnuTKH7cj7vMshEtCLN7Ak9CSKbjuAhaLLEzM
+            /* https://kpaste.infomaniak.com/wQd61amxePIxxCjwEv97eje7O2XTFB3f#3pPBbpJ8MB3ELzGRKYAcPrGtgGR7rdJzVkUUKVUvRNpZ */
             /*
                 {
                     "result": "success",
                     "data": {
-                        "id": "vUIauzncyB-TUORxFRQzRZlLTYoNSvRq",
-                        "data": "h\/KyG1eRpxt8mT0kA5KsGCzZLRK\/AR9ggaKT4VfSU6A=",
-                        "burn": false,
+                        "id": "wQd61amxePIxxCjwEv97eje7O2XTFB3f",
+                        "data": "B80iPuwAoGKjBoRgRr765h+FdkaytaDycJOIew==",
+                        "burn": true,
                         "password": true,
-                        "vector": "SNim0V9uxLEp0A7qHgYdBA==",
-                        "salt": "k5Md47OdHZA=",
-                        "created_at": 1727692384,
-                        "updated_at": 1727692384,
-                        "expirated_at": 1727695984,
-                        "deleted_at": null
+                        "vector": "YxfTX4mKLEs1g7fM6+BPxg==",
+                        "salt": "xJ\/tMs\/jgq8=",
+                        "created_at": 1743419212,
+                        "updated_at": 1743419212,
+                        "expirated_at": 1743505612,
+                        "deleted_at": 1743419221
                     }
                 }
             */
 
-            var kPasteCryptoDecrypt = new KPasteCrypto("6USpJVMMUvZDCXz7oUqPA5UMwy9QuH76nXmjLoMn2TD5", "SNim0V9uxLEp0A7qHgYdBA==", "k5Md47OdHZA=");
+            var kPasteCryptoDecrypt = new KPasteCrypto("3pPBbpJ8MB3ELzGRKYAcPrGtgGR7rdJzVkUUKVUvRNpZ", "YxfTX4mKLEs1g7fM6+BPxg==", "xJ/tMs/jgq8=");
             var decryptedText =
-                kPasteCryptoDecrypt.Decrypt("h/KyG1eRpxt8mT0kA5KsGCzZLRK/AR9ggaKT4VfSU6A=", "strenggeheim");
+                kPasteCryptoDecrypt.Decrypt("B80iPuwAoGKjBoRgRr765h+FdkaytaDycJOIew==", "strenggeheim");
+
+            Assert.AreEqual("text", decryptedText);
         }
     }
 }

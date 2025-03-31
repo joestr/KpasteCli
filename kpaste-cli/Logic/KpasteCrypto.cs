@@ -70,9 +70,9 @@ namespace kpaste_cli.Logic
             var plainTextBytesMemoryStream = new MemoryStream(plainTextBytes);
 
             var compressedPlainTextByesMemoryStream = new MemoryStream(plainTextBytes.Length); //set to estimate of compression ratio
-            using (GZipStream gZipStream = new GZipStream(compressedPlainTextByesMemoryStream, CompressionMode.Compress))
+            using (ZLibStream zLibStream = new ZLibStream(compressedPlainTextByesMemoryStream, CompressionMode.Compress))
             {
-                plainTextBytesMemoryStream.CopyTo(gZipStream);
+                plainTextBytesMemoryStream.CopyTo(zLibStream);
             }
 
             var compressedPlainTextBytes = compressedPlainTextByesMemoryStream.ToArray();
@@ -113,9 +113,9 @@ namespace kpaste_cli.Logic
             var compressedPlainTextBytesMemoryStream = new MemoryStream(compressedPlainTextBytes);
             var plainTextBytesMemoryStream = new MemoryStream(compressedPlainTextBytesMemoryStream.Capacity * 2 + 1024);
 
-            using (GZipStream gZipStream = new GZipStream(compressedPlainTextBytesMemoryStream, CompressionMode.Decompress))
+            using (ZLibStream zlibStream = new ZLibStream(compressedPlainTextBytesMemoryStream, CompressionMode.Decompress))
             {
-                gZipStream.CopyTo(plainTextBytesMemoryStream);
+                zlibStream.CopyTo(plainTextBytesMemoryStream);
             }
 
             var plainTextString = ArrayBufferToString(plainTextBytesMemoryStream.ToArray());

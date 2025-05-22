@@ -10,8 +10,16 @@ Pasting files to [infomaniak's]([https://](https://www.infomaniak.com/en)) servi
 
 ## Usage
 
+Create new paste with file:
 ```
 > .\kpaste-cli.exe new --filename .\somefile
 https://kpaste.infomaniak.com/???#???
+>
+```
+
+Get paste and print it to standard output:
+```
+> .\kpaste-cli.exe get --url "https://kpaste.infomaniak.com/???#???"
+text
 >
 ```

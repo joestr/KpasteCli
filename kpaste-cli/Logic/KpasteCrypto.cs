@@ -5,6 +5,7 @@ using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.IO.Compression;
 using System.Security.Cryptography;
+using System.Text;
 using SimpleBase;
 
 namespace kpaste_cli.Logic
@@ -118,7 +119,7 @@ namespace kpaste_cli.Logic
                 zlibStream.CopyTo(plainTextBytesMemoryStream);
             }
 
-            var plainTextString = ArrayBufferToString(plainTextBytesMemoryStream.ToArray());
+            var plainTextString = Utf8ToUtf16(ArrayBufferToString(plainTextBytesMemoryStream.ToArray()));
 
             return plainTextString;
         }
@@ -158,30 +159,39 @@ namespace kpaste_cli.Logic
         
         private string ArrayBufferToString(byte[] messageArray)
         {
-            var message = "";
-            for (var i = 0; i < messageArray.Length; i += 1) {
-                message += (char)messageArray[i];
-            }
-            return message;
+            return Encoding.UTF8.GetString(messageArray);
+
+            // This somehow has problems with text conversion.
+            //var message = "";
+            //for (var i = 0; i < messageArray.Length; i += 1) {
+            //    message += (char)messageArray[i];
+            //}
+            //return message;
         }
 
-        private byte[] StringToArrayBuffer(string message) {
-            byte[] messageArray = new byte[message.Length];
-            for (var i = 0; i < message.Length; i += 1) {
-                messageArray[i] = (byte)message[i];
-            }
-            return messageArray;
+        private byte[] StringToArrayBuffer(string message)
+        {
+            return Encoding.UTF8.GetBytes(message);
+
+            // This somehow has problems with text conversion.
+            //byte[] messageArray = new byte[message.Length];
+            //for (var i = 0; i < message.Length; i += 1) {
+            //    messageArray[i] = (byte)message[i];
+            //}
+            //return messageArray;
         }
 
         private string Utf16ToUtf8(string message)
         {
             return message;
+            // lol. This isn't required at all??
             //return Encoding.UTF8.GetString(Encoding.Unicode.GetBytes(message));
         }
 
         private string Utf8ToUtf16(string message)
         {
             return message;
+            // lol. This isn't required at all??
             //return Encoding.Unicode.GetString(Encoding.UTF8.GetBytes(message));
         }
 

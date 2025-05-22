@@ -23,3 +23,10 @@ Get paste and print it to standard output:
 text
 >
 ```
+
+## Caveats
+It isn't possible to load a paste which has been pasted encrypted with the Web UI.
+
+This has something to do with the fact that the JavaScript isn't using a MAC during the encryption.
+
+It is possible to view pastes on the Web UI, since the JavaScript can handle encrypted messages with a MAC.

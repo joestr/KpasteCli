@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "KpasteCli": {
+      "commandName": "Project",
+      "commandLineArgs": "--help"
+    }
+  }
+}

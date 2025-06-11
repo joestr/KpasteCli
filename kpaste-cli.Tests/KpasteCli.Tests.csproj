@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\kpaste-cli\kpaste-cli.csproj" />
+    <ProjectReference Include="..\kpaste-cli\KpasteCli.csproj" />
   </ItemGroup>
 
 </Project>

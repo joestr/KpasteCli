@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using SimpleBase;
 
-namespace kpaste_cli.Logic
+namespace KpasteCli.Logic
 {
     public class KPasteCrypto
     {

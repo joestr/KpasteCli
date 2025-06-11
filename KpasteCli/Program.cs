@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using CommandLine;
-using kpaste_cli.Logic;
-using kpaste_cli.Objects;
+using KpasteCli.Logic;
+using KpasteCli.Objects;
 
-namespace kpaste_cli;
+namespace KpasteCli;
 
 class Program
 {

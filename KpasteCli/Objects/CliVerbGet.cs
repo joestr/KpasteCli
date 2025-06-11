@@ -1,6 +1,6 @@
 using CommandLine;
 
-namespace kpaste_cli.Objects;
+namespace KpasteCli.Objects;
 
 [Verb("get", HelpText = "Get a paste.")]
 public class CliVerbGet

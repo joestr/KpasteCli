@@ -2,7 +2,7 @@
 using System.Text;
 using Newtonsoft.Json;
 
-namespace kpaste_cli.Logic
+namespace KpasteCli.Logic
 {
     public class Paste
     {

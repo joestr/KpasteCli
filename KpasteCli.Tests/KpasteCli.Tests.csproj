@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>kpaste_cli.Test</RootNamespace>
+    <RootNamespace>KpasteCli.Test</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\kpaste-cli\KpasteCli.csproj" />
+    <ProjectReference Include="..\KpasteCli\KpasteCli.csproj" />
   </ItemGroup>
 
 </Project>

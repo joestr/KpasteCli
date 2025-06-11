@@ -1,6 +1,6 @@
-﻿using kpaste_cli.Logic;
+﻿using KpasteCli.Logic;
 
-namespace kpaste_cli.Test
+namespace KpasteCli.Test
 {
     public class Tests
     {

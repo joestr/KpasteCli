@@ -52,7 +52,7 @@ class Program
             content = message;
         }
 
-        var kPasteCrypto = new KPasteCrypto();
+        var kPasteCrypto = new KpasteCrypto();
         var encryptionResult = kPasteCrypto.Encrypt(content, password);
 
         var kPaste = new Paste.NewPasteRequestDto()
@@ -95,7 +95,7 @@ class Program
             return;
         }
 
-        var kPasteCrypto = new KPasteCrypto(key.Replace("\\/", "/"), paste.Data.Vector.Replace("\\/", "/"), paste.Data.Salt.Replace("\\/", "/"));
+        var kPasteCrypto = new KpasteCrypto(key.Replace("\\/", "/"), paste.Data.Vector.Replace("\\/", "/"), paste.Data.Salt.Replace("\\/", "/"));
         var decryptionResult = kPasteCrypto.Decrypt(paste.Data.Data.Replace("\\/", "/"), password);
 
         if (fileName == "")

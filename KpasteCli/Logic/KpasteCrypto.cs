@@ -10,15 +10,15 @@ using SimpleBase;
 
 namespace KpasteCli.Logic
 {
-    public class KPasteCrypto
+    public class KpasteCrypto
     {
-        private static int iterationCount = 100000;
-        private static int keySize = 256;
-        private static int tagSize = 128;
+        private static readonly int IterationCount = 100000;
+        private static readonly int KeySize = 256;
+        private static readonly int TagSize = 128;
 
-        private string key;
-        private string vector;
-        private string salt;
+        private readonly string _key;
+        private readonly string _vector;
+        private readonly string _salt;
 
         public class KpasteEncryptionResultDto
         {
@@ -28,18 +28,18 @@ namespace KpasteCli.Logic
             public string Message { get; set; }
         }
 
-        public KPasteCrypto(string key, string vector, string salt)
+        public KpasteCrypto(string key, string vector, string salt)
         {
-            this.key = FromBase58(key);
-            this.vector = ArrayBufferToString(Convert.FromBase64String(vector));
-            this.salt = ArrayBufferToString(Convert.FromBase64String(salt));
+            this._key = FromBase58(key);
+            this._vector = ArrayBufferToString(Convert.FromBase64String(vector));
+            this._salt = ArrayBufferToString(Convert.FromBase64String(salt));
         }
         
-        public KPasteCrypto()
+        public KpasteCrypto()
         {
-            this.key = GetRandomBytes(32);
-            this.vector = GetRandomBytes(16);
-            this.salt = GetRandomBytes(8);
+            this._key = GetRandomBytes(32);
+            this._vector = GetRandomBytes(16);
+            this._salt = GetRandomBytes(8);
         }
 
         public KpasteEncryptionResultDto Encrypt(string plainText, string password)
@@ -49,9 +49,9 @@ namespace KpasteCli.Logic
 
             var result = new KpasteEncryptionResultDto()
             {
-                Key = ToBase58(this.key),
-                Vector = Convert.ToBase64String(StringToArrayBuffer(this.vector)),
-                Salt = Convert.ToBase64String(StringToArrayBuffer(this.salt)),
+                Key = ToBase58(this._key),
+                Vector = Convert.ToBase64String(StringToArrayBuffer(this._vector)),
+                Salt = Convert.ToBase64String(StringToArrayBuffer(this._salt)),
                 Message = message
             };
             return result;
@@ -81,7 +81,7 @@ namespace KpasteCli.Logic
 
             IBlockCipher cipher = new AesEngine();
             KeyParameter keyParam = new KeyParameter(derivedKey);
-            AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, StringToArrayBuffer(this.vector), new byte[0]);
+            AeadParameters keyParamAead = new AeadParameters(keyParam, TagSize, StringToArrayBuffer(this._vector), new byte[0]);
             GcmBlockCipher cipherMode = new GcmBlockCipher(cipher);
             cipherMode.Init(true, keyParamAead);
             int outputSize = cipherMode.GetOutputSize(compressedPlainTextBytes.Length);
@@ -102,7 +102,7 @@ namespace KpasteCli.Logic
 
             IBlockCipher cipher = new AesEngine();
             KeyParameter keyParam = new KeyParameter(derivedKey);
-            AeadParameters keyParamAead = new AeadParameters(keyParam, tagSize, StringToArrayBuffer(this.vector), new byte[0]);
+            AeadParameters keyParamAead = new AeadParameters(keyParam, TagSize, StringToArrayBuffer(this._vector), new byte[0]);
             GcmBlockCipher cipherMode = new GcmBlockCipher(cipher);
             cipherMode.Init(false, keyParamAead);
             var outputSize = cipherMode.GetOutputSize(cipherTextBytes.Length);
@@ -130,21 +130,21 @@ namespace KpasteCli.Logic
             if (password.Length > 0)
             {
                 var passwordBytes = StringToArrayBuffer(password);
-                var keyBytes = StringToArrayBuffer(this.key);
+                var keyBytes = StringToArrayBuffer(this._key);
                 newKeyBytes = new byte[keyBytes.Length + passwordBytes.Length];
                 keyBytes.CopyTo(newKeyBytes, 0);
                 passwordBytes.CopyTo(newKeyBytes, keyBytes.Length);
             }
             else
             {
-                var keyBytes = StringToArrayBuffer(this.key);
+                var keyBytes = StringToArrayBuffer(this._key);
                 newKeyBytes = keyBytes;
             }
 
-            var saltBytes = StringToArrayBuffer(this.salt);
+            var saltBytes = StringToArrayBuffer(this._salt);
 
-            return Rfc2898DeriveBytes.Pbkdf2(newKeyBytes, saltBytes, iterationCount, HashAlgorithmName.SHA256,
-                keySize/8);
+            return Rfc2898DeriveBytes.Pbkdf2(newKeyBytes, saltBytes, IterationCount, HashAlgorithmName.SHA256,
+                KeySize/8);
         }
 
         private string ToBase58(string input)

@@ -15,10 +15,10 @@ namespace KpasteCli.Test
             var message = "A text to test the encryption and decryption.";
             var password = "1234";
 
-            var kPasteCrypto = new KPasteCrypto();
+            var kPasteCrypto = new KpasteCrypto();
             var res = kPasteCrypto.Encrypt(message, password);
 
-            var kPasteCryptoDecrypt = new KPasteCrypto(res.Key, res.Vector, res.Salt);
+            var kPasteCryptoDecrypt = new KpasteCrypto(res.Key, res.Vector, res.Salt);
             var decryptedText =
                 kPasteCryptoDecrypt.Decrypt(res.Message, password);
 
@@ -31,10 +31,10 @@ namespace KpasteCli.Test
             var message = "Well, let's test some Äöü. How about some ß or ẞ? Maybe even ¯\\_(ツ)_/¯? How do you like that?";
             var password = "1234";
 
-            var kPasteCrypto = new KPasteCrypto();
+            var kPasteCrypto = new KpasteCrypto();
             var res = kPasteCrypto.Encrypt(message, password);
 
-            var kPasteCryptoDecrypt = new KPasteCrypto(res.Key, res.Vector, res.Salt);
+            var kPasteCryptoDecrypt = new KpasteCrypto(res.Key, res.Vector, res.Salt);
             var decryptedText =
                 kPasteCryptoDecrypt.Decrypt(res.Message, password);
 
@@ -48,7 +48,7 @@ namespace KpasteCli.Test
 
             var paste = new Paste();
 
-            var kPasteCrypto = new KPasteCrypto();
+            var kPasteCrypto = new KpasteCrypto();
             var res = kPasteCrypto.Encrypt(plainText, "1234");
 
             var kPaste = new Paste.NewPasteRequestDto()
@@ -83,7 +83,7 @@ namespace KpasteCli.Test
 
             var paste = new Paste();
 
-            var kPasteCrypto = new KPasteCrypto();
+            var kPasteCrypto = new KpasteCrypto();
             var res = kPasteCrypto.Encrypt(plainText, "1234");
 
             var kPaste = new Paste.NewPasteRequestDto()

@@ -11,7 +11,7 @@
   <Identity
     Name="JoelStrasser.49230F8107349"
     Publisher="CN=6554F80A-33E0-424F-9311-EC251AFB427D"
-    Version="1.1.0.0" />
+    Version="1.2.0.0" />
 
   <Properties>
     <DisplayName>Kpaste CLI</DisplayName>

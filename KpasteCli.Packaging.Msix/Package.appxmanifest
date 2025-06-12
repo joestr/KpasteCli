@@ -37,7 +37,8 @@
         Description="With Kpaste CLI you can interact with infomaniak kPaste service in the command line."
         BackgroundColor="transparent"
         Square150x150Logo="Images\MediumTile.png"
-        Square44x44Logo="Images\AppIcon.png">
+        Square44x44Logo="Images\AppIcon.png"
+		AppListEntry="none">
         <uap:DefaultTile Wide310x150Logo="Images\WideTile.png"  Square71x71Logo="Images\SmallTile.png" Square310x310Logo="Images\LargeTile.png"/>
         <uap:SplashScreen Image="Images\SplashScreen.png" />
         <uap:InitialRotationPreference>

@@ -2,6 +2,7 @@
 using CommandLine;
 using KpasteCli.Logic;
 using KpasteCli.Objects;
+using Org.BouncyCastle.Crypto;
 
 namespace KpasteCli;
 
@@ -37,7 +38,7 @@ class Program
     {
         var validity = options.Validity;
         var password = options.Password;
-        var isPasswordPresent = password != "";
+        var isPasswordPresent = !string.IsNullOrEmpty(password);
         var burn = options.Burn;
         var fileName = options.FileName;
         var message = options.Message;
@@ -45,11 +46,24 @@ class Program
 
         if (fileName != null)
         {
-            content = File.ReadAllText(fileName, Encoding.UTF8);
+            if (File.Exists(fileName))
+            {
+                content = File.ReadAllText(fileName, Encoding.UTF8);
+            }
+            else
+            {
+                Console.Error.WriteLine("E1000: The file does not exist. (File location: \"{0}\")", fileName);
+                Environment.Exit(1000);
+            }
         }
         else if (message != null)
         {
             content = message;
+        }
+        else
+        {
+            Console.Error.WriteLine("E1001: There is no content to paste.");
+            Environment.Exit(1001);
         }
 
         var kPasteCrypto = new KpasteCrypto();
@@ -96,7 +110,17 @@ class Program
         }
 
         var kPasteCrypto = new KpasteCrypto(key.Replace("\\/", "/"), paste.Data.Vector.Replace("\\/", "/"), paste.Data.Salt.Replace("\\/", "/"));
-        var decryptionResult = kPasteCrypto.Decrypt(paste.Data.Data.Replace("\\/", "/"), password);
+        var decryptionResult = "";
+
+        try
+        {
+            decryptionResult = kPasteCrypto.Decrypt(paste.Data.Data.Replace("\\/", "/"), password);
+        }
+        catch (InvalidCipherTextException exception)
+        {
+            Console.Error.WriteLine("E1002: The MAC (Message Authentication Code) check failed. This message is not properly encrypted.");
+            Environment.Exit(1002);
+        }
 
         if (fileName == "")
         {

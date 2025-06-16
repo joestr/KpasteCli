@@ -118,6 +118,7 @@ class Program
         }
         catch (InvalidCipherTextException exception)
         {
+            throw;
             Console.Error.WriteLine("E1002: The MAC (Message Authentication Code) check failed. This message is not properly encrypted.");
             Environment.Exit(1002);
         }

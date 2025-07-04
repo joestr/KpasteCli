@@ -1,6 +1,6 @@
 # KpasteCli
 
-Pasting files to [infomaniak's]([https://](https://www.infomaniak.com/en)) service [kPaste](https://kpaste.infomaniak.com/).
+Pasting and receicing files to [infomaniak's]([https://](https://www.infomaniak.com/en)) service [kPaste](https://kpaste.infomaniak.com/).
 
 ## Build
 
@@ -24,10 +24,10 @@ text
 >
 ```
 
-## Caveats
+## Contributing
 
-It isn't possible to load a paste which has been pasted encrypted with the Web UI.
+See [contributing guide](./CONTRIBUTING.md).
 
-This has something to do with the fact that the JavaScript isn't using a MAC during the encryption.
+## License
 
-It is possible to view pastes on the Web UI, since the JavaScript can handle encrypted messages with a MAC.
+See [license file](./LICENSE.txt).

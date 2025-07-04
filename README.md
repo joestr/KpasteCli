@@ -1,6 +1,10 @@
 # KpasteCli
 
-Pasting and receicing files to [infomaniak's]([https://](https://www.infomaniak.com/en)) service [kPaste](https://kpaste.infomaniak.com/).
+Pasting and receiving files to [infomaniak's](https://www.infomaniak.com/en) service [kPaste](https://kpaste.infomaniak.com/).
+
+<a href="https://apps.microsoft.com/detail/9mxzj94hcc4f?referrer=appbadge&mode=direct" target="_blank" rel="noopener">
+	<img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Download it from Microsoft Store" width="200"/>
+</a>
 
 ## Build
 
@@ -10,16 +14,16 @@ Pasting and receicing files to [infomaniak's]([https://](https://www.infomaniak.
 
 ## Usage
 
-Create new paste with file:
+Create a new paste with the content of a file:
 ```
-> .\KpasteCli.exe new --filename .\somefile
+> KpasteCli.exe new --filename .\somefile
 https://kpaste.infomaniak.com/???#???
 >
 ```
 
-Get paste and print it to standard output:
+Get a paste and print it to the standard output:
 ```
-> .\KpasteCli.exe get --url "https://kpaste.infomaniak.com/???#???"
+> KpasteCli.exe get --url "https://kpaste.infomaniak.com/???#???"
 text
 >
 ```
